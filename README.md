@@ -37,6 +37,8 @@ npm run contract         # CONTRACT.md, checked over HTTP: all red until /v1 exi
    green, contract all red. Commit nothing yet.
 2. Read `CONTRACT.md` — ten minutes, no agent. Start `NOTES.md` with the **two
    sentences of the contract you expect the agent to get wrong**, and why.
+   **Commit `NOTES.md` now**, before the agent touches `src/` — the commit order
+   is how the rubric sees that you predicted first.
 3. Hand it to your agent. Something like:
 
    > Implement the `/v1` API in `src/v1.js` exactly as `CONTRACT.md` specifies,
@@ -63,23 +65,23 @@ Rules: do not edit `test/contract.test.js` to make it pass, and do not change
 `CONTRACT.md` to match the code. If you think a test or the contract is wrong,
 say so in `NOTES.md` — that is a finding, not a failure.
 
-## Then: your own project
+## Then: your own project — part of `PA#2`
 
-Write the same kind of contract for **one endpoint of your team's project** — the
-one whose errors you would least like a stranger to see. Use the sections of
+With your team, write the same kind of contract for **one endpoint of your
+team's project** — the one whose errors you would least like a stranger to see. Use the sections of
 `CONTRACT.md` as the template: errors (slug, status, when), resource shape,
 rules for every field, paging if it returns a list, idempotency if it creates
 something, and what happens to the old version when it changes. Commit it to your
-team repository as `docs/contract/<endpoint>.md`.
+team repository as `docs/contract/<endpoint>.md`. It is scored in `PA#2` (due
+Wednesday, November 11), where its contract tests become part of your quality
+gate — not in `IA#3`.
 
-## What to turn in on Classroom
+## What to turn in on Classroom — `IA#3`
 
-Not graded on its own — it is groundwork for `PA#2`, where contract tests become
-part of your quality gate. Due **Wednesday 28 October, 22:00**:
+Individual, 100 points, 2% of the course. Due **Wednesday, October 28, 2026,
+22:00**. The rubric is attached to the assignment on Classroom.
 
-- `contract-run-1.txt`, `contract-run-final.txt` and `NOTES.md` — your own;
-- the link to your team's `docs/contract/<endpoint>.md` — the same link for
-  everyone in the team.
-
-`AI-LOG.md` still applies to the project contract: say which parts the
-assistant drafted.
+One zip of **this repository, including `.git`**, named
+`<StudentID>_<self-assessed total>.zip`, containing your `/v1` code,
+`contract-run-1.txt`, `contract-run-final.txt`, `NOTES.md`, `AI-LOG.md` and
+`SELF_ASSESSMENT_REPORT.md`. Leave out `data/`.
