@@ -3,7 +3,7 @@
 CSC13114 · Advanced Web Application Development · HK1 2026–2027
 
 The `smart-restaurant` menu service again, as it looks after IA#2: money is an
-integer number of dong. Node 22.5+, no dependencies — SQLite through the
+integer number of dong. Node 22.13+, no dependencies — SQLite through the
 built-in `node:sqlite`.
 
 The service still has only its **legacy** API (`/menu…`). Your job today is the

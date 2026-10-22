@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Session 5 starter — the smart-restaurant menu service, and the contract its /v1 API must keep",
-  "engines": { "node": ">=22.5" },
+  "engines": { "node": ">=22.13" },
   "scripts": {
     "start": "node src/server.js",
     "migrate": "node scripts/migrate.js up",
