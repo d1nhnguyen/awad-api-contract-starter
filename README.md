@@ -65,17 +65,6 @@ Rules: do not edit `test/contract.test.js` to make it pass, and do not change
 `CONTRACT.md` to match the code. If you think a test or the contract is wrong,
 say so in `NOTES.md` — that is a finding, not a failure.
 
-## Then: your own project — part of `PA#2`
-
-With your team, write the same kind of contract for **one endpoint of your
-team's project** — the one whose errors you would least like a stranger to see. Use the sections of
-`CONTRACT.md` as the template: errors (slug, status, when), resource shape,
-rules for every field, paging if it returns a list, idempotency if it creates
-something, and what happens to the old version when it changes. Commit it to your
-team repository as `docs/contract/<endpoint>.md`. It is scored in `PA#2` (due
-Wednesday, November 11), where its contract tests become part of your quality
-gate — not in `IA#3`.
-
 ## What to turn in on Classroom — `IA#3`
 
 Individual, 100 points, 2% of the course. Due **Wednesday, October 28, 2026,
