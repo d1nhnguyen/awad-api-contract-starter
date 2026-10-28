@@ -24,8 +24,8 @@ Why I expect the agent to get it wrong: the agent might save the order and its i
   passed in contract-run-1.txt.
 - P2 — did not come true. The order, its lines and the idempotency key are written
   inside one `BEGIN IMMEDIATE` transaction (src/v1.js:141, 238–259). I checked
-  this in the code, because no test can crash the server halfway through a
-  transaction; "the same key sent five times at once places one order" passed.
+  this in the code (with the review session, see AI-LOG.md), because no test
+  can crash the server halfway through a transaction; "the same key sent five times at once places one order" passed.
 
 ## 2. First run (contract-run-1.txt)
 
@@ -38,29 +38,31 @@ that it said it guessed at, explained the same way:
    request fields it does not know" and "any other difference does". What the
    agent did: it fingerprints the whole body, so a retry that differs only in an
    unknown field is `422 idempotency-key-reused`. Wording I would change it to
-   (§4.2): *"The fingerprint covers the whole body as sent, including fields the
-   server does not know."*
+   (§4.2): _"The fingerprint covers the whole body as sent, including fields the
+   server does not know."_
 2. **§4.2 — "while the first request is still being processed".** The sentence
    does not say when processing starts or whether it covers more than one
    instance. What the agent did: a request is in progress from the moment its key
    passes step 1 (before its body is read) until it ends; the mark is kept in the
    database so every instance sees it, and it lapses 60 s after a crash. Wording:
-   *"A request is in progress from when its Idempotency-Key passes step 1 until
-   its response is sent, on every instance that shares the database."*
+   _"A request is in progress from when its Idempotency-Key passes step 1 until
+   its response is sent, on every instance that shares the database."_
 3. **§4.4 — "Use a cursor with the same tableId it came from."** The sentence
    tells the client what to do, but not what the server does when the client
    does not. What the agent did: the cursor carries its tableId, and a mismatch
    (including leaving tableId out) is `400 validation` with `parameter: cursor`.
-   Wording: *"A cursor sent with a different tableId, or without the tableId it
-   came from, is 400 validation (parameter `cursor`)."*
+   Wording: _"A cursor sent with a different tableId, or without the tableId it
+   came from, is 400 validation (parameter `cursor`)."_
 
 ## 3. Two-way sentences
 
 I asked the agent, in the session that wrote `src/` and after commit 659e202:
-*"Which sentences of CONTRACT.md could be read two ways, and what did you choose
-for each?"* Its answer is pasted below as given (only the group labels were made
-headings). Under each point, the lines marked **→** are mine: my decision and
-why, and the sentence I would add to `CONTRACT.md`.
+_"Which sentences of CONTRACT.md could be read two ways, and what did you choose
+for each?"_ Its answer is pasted below as given (only the group labels were made
+headings). Under each point, the lines marked **→** are my decision and why,
+and the sentence I would add to `CONTRACT.md`. I drafted them with a second
+Claude Code session that did not write `src/` (see AI-LOG.md), and checked each
+one against `CONTRACT.md` and the code.
 
 ### Agent's answer, with my decisions
 
@@ -127,7 +129,7 @@ I found 20 sentences in CONTRACT.md that can be read two ways. Each entry gives 
     - **→ Decision:** keep: invalid. The client did send the parameter, and an empty string is not an integer from 1 to 100; treating it as absent would hide a client bug.
     - **→ Add to §4.4:** "A parameter given with an empty value is invalid, not absent."
 16. The same sentence, for a repeated parameter (?limit=5&limit=500). Reject, or take one value? My first version returned 400. Since your 659e202, the first value counts. That is the one place where a choice of mine was caught by a test.
-    - **→ Correction:** no test caught this: both `contract-run-1.txt` and `contract-run-final.txt` are 29/29. I found it while reviewing the agent's diff, before asking this question (AI-LOG.md, Rejected; commit 659e202).
+    - **→ Correction:** no test caught this: both `contract-run-1.txt` and `contract-run-final.txt` are 29/29. It was found when I reviewed the agent's diff with a second Claude Code session, before asking this question (AI-LOG.md, Rejected; commit 659e202).
     - **→ Decision:** the first value counts. §2 allows `validation` only when a value "breaks a rule in this contract", and §4.4 has no rule about repeats.
     - **→ Add to §4.4:** "If a parameter is given more than once, the server uses the first value."
 17. "Use a cursor with the same tableId it came from." This tells the client what to do; what should the server do if the client doesn't? Chose: the cursor records its tableId, and a mismatch is 400 validation on cursor. Leaving tableId out when the cursor had one also counts as a mismatch.
@@ -146,7 +148,10 @@ I found 20 sentences in CONTRACT.md that can be read two ways. Each entry gives 
     - **→ Decision:** keep the item's own id: `/v1/menu/012` is a 404 in v1, so echoing the request would link to nothing. Keeping the legacy bugs is what "exactly as they do today" says, but I record the `e.message` leak as a finding: it can expose SQL and table names, and the contract as written forbids fixing it.
     - **→ Add to §5:** "`Link` names the item's own id (`</v1/menu/12>` for `/menu/012`). 'Exactly as they do today' includes existing bugs, except fixes for security problems."
 
-### Found by me (not in the agent's list)
+### Not in the implementing agent's list
+
+Found with the second Claude Code session (AI-LOG.md), not by the agent that
+wrote `src/`. I checked each one against `CONTRACT.md` and the code.
 
 21. **§2 vs §5 — is the list of problem types closed?** §2 says `type` is a slug
     from the table, "No other values". §5 says "a new problem type" is an
@@ -167,6 +172,12 @@ I found 20 sentences in CONTRACT.md that can be read two ways. Each entry gives 
       timestamp has the same shape.
     - **→ Add to §1:** "Timestamps are always written as `YYYY-MM-DDTHH:mm:ss.sssZ`."
 
-I also found point 16 (a repeated query parameter) myself while reviewing the
-agent's diff, before asking the question above; the agent listed it only after
-seeing my commit 659e202.
+Point 16 (a repeated query parameter) was also found before the question above,
+in the diff review described in AI-LOG.md; the implementing agent listed it only
+after seeing commit 659e202.
+
+### Found by me
+
+§4.4 — what defines the sort order in GET /v1/orders? §4.4 says "items are Orders, newest first (largest id first)." Reading A: orders are sorted by createdAt descending, with id descending as a tie-breaker. Reading B: "newest first" is defined as id descending, regardless of createdAt (which can differ if two instances have slightly skewed clocks). The code (src/v1.js:117–118) orders strictly by ORDER BY id DESC and keyset-pages on id < ?.
+→ Decision: B, which is what the code does. Auto-incrementing id is strictly monotonic in the shared database even when two server instances have clock drift, which is what makes stable keyset pagination work.
+→ Add to §4.4: "Order sequence is defined solely by id descending, not by createdAt."
