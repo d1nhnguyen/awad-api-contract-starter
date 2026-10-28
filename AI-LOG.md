@@ -1,0 +1,1 @@
+Rejected: src/v1.js listOrders returned 400 validation when a query parameter was repeated (?limit=5&limit=5). The contract has no such rule: §2 allows validation only when a field or parameter "breaks a rule in this contract", and the §4.4 table lists only three rules. Removed; the server now uses the first value.

@@ -171,14 +171,12 @@ export function createV1(db) {
   // §4.4
   function listOrders(res, params) {
     const errors = [];
+    // §4.4 has no rule against a repeated parameter: the first value counts.
     const read = (name, parse, rule) => {
-      const values = params.getAll(name);
-      if (values.length > 1) errors.push({ parameter: name, detail: 'must be given at most once' });
-      else if (values.length === 1) {
-        const value = parse(values[0]);
-        if (value === undefined) errors.push({ parameter: name, detail: rule });
-        return value;
-      }
+      if (!params.has(name)) return undefined;
+      const value = parse(params.get(name));
+      if (value === undefined) errors.push({ parameter: name, detail: rule });
+      return value;
     };
     const tableId = read('tableId', intIn(1, 200), 'must be an integer from 1 to 200') ?? null;
     const tableIdOk = errors.length === 0;
