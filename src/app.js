@@ -8,6 +8,10 @@ import { createV1 } from './v1.js';
 //           { error, message }. See CONTRACT.md §5 before touching it.
 //   /v1/…   the versioned API described in CONTRACT.md — src/v1.js.
 
+// CONTRACT.md §5: every legacy response, errors included, announces its end
+// (Deprecation: RFC 9745, 15 Oct 2026 00:00 UTC; Sunset: RFC 8594).
+const LEGACY_HEADERS = { Deprecation: '@1792022400', Sunset: 'Thu, 31 Dec 2026 23:59:59 GMT' };
+
 const legacyError = (res, status, code, message, headers) => send(res, status, { error: code, message }, headers);
 const isPrice = (p) => typeof p === 'number' && Number.isFinite(p) && p > 0 && p <= 100000;
 
@@ -44,7 +48,8 @@ export function createApp(db) {
       const id = Number(parts[1]);
       const row = Number.isInteger(id) ? q.get.get(id) : undefined;
       if (!row) return legacyError(res, 404, 'not_found', `menu item ${parts[1]} not found`, h);
-      if (req.method === 'GET') return send(res, 200, legacyView(row), h);
+      if (req.method === 'GET')
+        return send(res, 200, legacyView(row), { ...h, Link: `</v1/menu/${row.id}>; rel="successor-version"` });
       if (req.method === 'PATCH') {
         let body; try { body = JSON.parse((await readRaw(req)) || '{}'); } catch { body = null; }
         if (!body || !isPrice(body.price))
@@ -63,13 +68,14 @@ export function createApp(db) {
     if (url.pathname === '/v1' || url.pathname.startsWith('/v1/')) {
       if (await v1(req, res, url)) return;
     }
-    return legacy(req, res, url, {});
+    return legacy(req, res, url, LEGACY_HEADERS);
   }
 
   return createServer((req, res) => {
+    // /v1 answers its own errors, so whatever lands here is a legacy response.
     handle(req, res).catch((e) => {
       console.error(e);
-      if (!res.headersSent) legacyError(res, 500, 'internal', e.message);
+      if (!res.headersSent) legacyError(res, 500, 'internal', e.message, LEGACY_HEADERS);
     });
   });
 }
