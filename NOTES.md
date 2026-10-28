@@ -178,6 +178,17 @@ after seeing commit 659e202.
 
 ### Found by me
 
-§4.4 — what defines the sort order in GET /v1/orders? §4.4 says "items are Orders, newest first (largest id first)." Reading A: orders are sorted by createdAt descending, with id descending as a tie-breaker. Reading B: "newest first" is defined as id descending, regardless of createdAt (which can differ if two instances have slightly skewed clocks). The code (src/v1.js:117–118) orders strictly by ORDER BY id DESC and keyset-pages on id < ?.
-→ Decision: B, which is what the code does. Auto-incrementing id is strictly monotonic in the shared database even when two server instances have clock drift, which is what makes stable keyset pagination work.
-→ Add to §4.4: "Order sequence is defined solely by id descending, not by createdAt."
+23. **§4.4 — "newest first (largest `id` first)".** The sentence names two
+    orders at once: by time ("newest") and by `id`. Nothing in the contract says
+    that a larger `id` always has a later `createdAt` (§3 only shows both fields,
+    §1 only gives the timestamp format), so it does not say which one wins if
+    they disagree. Reading A: "newest" is the rule, so the list is sorted by
+    `createdAt` and a client may expect `createdAt` to decrease along a page.
+    Reading B: the parenthesis is the rule, so the list is sorted by `id`, and
+    `createdAt` only records when each order was placed.
+    - **→ Decision:** B. The parenthesis is the only exact rule in the sentence,
+      and §4.4's paging promise ("no order appears twice or is skipped") needs a
+      sort key that never ties: two orders can share a `createdAt` down to the
+      millisecond (§1's format), but never an `id`. The code sorts by `id`.
+    - **→ Add to §4.4:** "Orders are sorted by `id`, largest first. `createdAt`
+      usually follows the same order, but clients must not rely on it."

@@ -58,6 +58,9 @@ Asked for: a summary of the README, CONTRACT.md, the rubric and the slides;
 "find one thing in the agent's diff I should not keep"; then the fix prompt
 "Remove the 'must be given at most once' rule in listOrders"; then a draft of
 NOTES.md (§1 Outcome, §2, the decision and wording lines in §3, points 21–22).
+Later: a rewording of my own point 23 (NOTES.md §3, "Found by me") so that it
+argues from the contract instead of the code; the point itself is mine. Then a
+draft of SELF_ASSESSMENT_REPORT.md, whose marks I checked against the rubric.
 Kept: the repeated-parameter finding (it showed ?limit=5&limit=5 → 400 on a
 throwaway server, and that §2/§4.4 have no such rule); its fix in 659e202,
 still 29/29 and 3/3; the NOTES draft, after I read each point against
